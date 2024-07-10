@@ -11,15 +11,15 @@ namespace :composer do
   task :install_executable do
     on release_roles(fetch(:composer_roles)) do
       within shared_path do
-        composer_php_version = fetch(:composer_php_version, :php)
+        composer_php_command = fetch(:composer_php_command, '/usr/bin/php')
         composer_version = fetch(:composer_version, nil)
         composer_version_option = composer_version ? "-- --version=#{composer_version}" : ""
         if test "[", "!", "-e", "composer.phar", "]"
-          execute :curl, "-s", fetch(:composer_download_url), "|", composer_php_version, composer_version_option
+          execute :curl, "-s", fetch(:composer_download_url), "|", composer_php_command, composer_version_option
         elsif composer_version
           current_version = capture(:php, "composer.phar", "-V", strip: false)
           unless current_version.include? "Composer version #{composer_version} "
-            execute :curl, "-s", fetch(:composer_download_url), "|", composer_php_version, composer_version_option
+            execute :curl, "-s", fetch(:composer_download_url), "|", composer_php_command, composer_version_option
           end
         end
       end
@@ -30,8 +30,9 @@ namespace :composer do
     args.with_defaults(:command => :list)
     on release_roles(fetch(:composer_roles)) do
       within fetch(:composer_working_dir) do
-        composer_php_version = fetch(:composer_php_version, :php)
-        execute composer_php_version, :composer, args[:command], *args.extras
+        composer_php_command = fetch(:composer_php_command, '/usr/bin/php')
+        composer_command = fetch(:composer_command, '/usr/local/bin/composer')
+        execute composer_php_command, composer_command, args[:command], *args.extras
       end
     end
   end
